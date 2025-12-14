@@ -1422,14 +1422,19 @@ def main_pems04(trial):
 
     else:
         print(args, flush=True)
-        with open(args.hparam_file or 'hyperparams/hyperparams_trial_no_3_2024-07-26_15-05-54.json', 'r') as f:
-            file = json.load(f)
-        lamda_1 = file['lamda_1']
-        lamda_2 = file['lamda_2']
-        lamda_3 = file['lamda_3']
-        lamda_4 = file['lamda_4']
-        # num_prototypes_per_class = file['num_prototypes_per_class'] #TODO
-        num_prototypes_per_class = 7
+
+        if args.hparam_file is not None:
+            with open(args.hparam_file, 'r') as f:
+                file = json.load(f)
+            lamda_1 = file['lamda_1']
+            lamda_2 = file['lamda_2']
+            lamda_3 = file['lamda_3']
+            lamda_4 = file['lamda_4']
+        else:
+            # default behavior: no Optuna, no annealing
+            # keep lamda_* = 0.0 (already initialized above)
+            pass
+
     if not args.xai:
         lamda_1, lamda_2, lamda_3, lamda_4 = 0.0, 0.0, 0.0, 0.0
     else:
