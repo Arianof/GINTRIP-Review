@@ -642,7 +642,7 @@ def load_graphdata_channel1(
     train_target = dataset['train_target']  # (10181, 307, 12)
 
     val_x = dataset['val_x']
-    val_x = val_x[:, :, 0:1, :],
+    val_x = val_x[:, :, 0:1, :]
     val_target = dataset['val_target']
 
     test_x = dataset['test_x']
