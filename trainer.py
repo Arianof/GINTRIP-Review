@@ -943,9 +943,11 @@ class Trainer():
         output = output.transpose(1, 3)
         real = torch.unsqueeze(real_val, dim=1)
         # if not self.mi_loss or self.loss_mse: #TODO
-        print("mi_loss check", self.mi_loss, self.loss_mse)
+        if self.mi_loss:
+            predict = output
+        else:
+            predict = self.scaler.inverse_transform(output)
 
-        predict = output
         # congestion_th = torch.from_numpy(self.congestion_th).to(real.device)
         congestion_gt = (real[:, :, :].mean(dim=-1).squeeze(0) < self.congestion_th.to(real.device)).squeeze(1).to(
             torch.long)
@@ -1060,8 +1062,10 @@ class Trainer():
 
         self.optimizer.step()
         # if self.mi_loss or self.loss_mse:
-        predict = self.scaler.inverse_transform(output)
-        real = self.scaler.inverse_transform(real)
+        print("predict:", predict)
+        print("real:", real)
+        if self.mi_loss:
+            predict = inverse_transform(predict, self.scaler, self.min_val)
         mae = masked_mae(predict, real, 0.0, scalar=self.scaler).item()
         self.writer.add_scalar('MAE/train', mae, self.iter)
         mape = masked_mape(predict, real, 0.0).item()
@@ -1198,8 +1202,10 @@ class Trainer():
             self.writer.add_scalar('Sparsity/val', sparsity, self.iter)
             # output = logits.transpose(1, 3)
             real = torch.unsqueeze(real_val, dim=1)
-
-            predict = output
+            if self.mi_loss:
+                predict = output
+            else:
+                predict = self.scaler.inverse_transform(output)
             loss_reg = self.loss(predict, real, self.scaler, self.min_val, null_val=0.0,
                                  iner_coeff=1.0)  # TODO: change the name of loss to loss_reg
             # congestion_th = torch.from_numpy(self.congestion_th).to(args.device)
@@ -1212,8 +1218,9 @@ class Trainer():
             except IndexError:
                 congestion_loss = torch.tensor(0.0).to(real.device)
 
-            predict = self.scaler.inverse_transform(output)
-            real = self.scaler.inverse_transform(real)
+            if self.mi_loss:
+                predict = inverse_transform(predict, self.scaler, self.min_val)
+
             mae = masked_mae(predict, real, 0.0).item()
 
             self.writer.add_scalar('MAE/val', mae, self.iter)
