@@ -542,11 +542,11 @@ def read_and_generate_dataset(graph_signal_matrix_filename,
     (stats, train_x_norm, val_x_norm, test_x_norm) = normalization(train_x, val_x, test_x)
 # change format from train -> x to train_x as key
     all_data = {
-        'train_x': train_x_norm,
+        'train_x': train_x,
         'train_target': train_target,
-        'val_x': val_x_norm,
+        'val_x': val_x,
         'val_target': val_target,
-        'test_x': test_x_norm,
+        'test_x': test_x,
         'test_target': test_target,
         'mean': stats['_mean'],
         'std': stats['_std'],
