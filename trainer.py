@@ -943,10 +943,8 @@ class Trainer():
         output = output.transpose(1, 3)
         real = torch.unsqueeze(real_val, dim=1)
         # if not self.mi_loss or self.loss_mse: #TODO
-        if self.mi_loss:
-            predict = output
-        else:
-            predict = self.scaler.inverse_transform(output)
+        predict_norm = output
+
 
         # congestion_th = torch.from_numpy(self.congestion_th).to(real.device)
         congestion_gt = (real[:, :, :].mean(dim=-1).squeeze(0) < self.congestion_th.to(real.device)).squeeze(1).to(
@@ -958,11 +956,19 @@ class Trainer():
             congestion_loss = torch.tensor(0.0).to(real.device)
         if self.iter % self.step == 0 and self.task_level <= self.seq_out_len:
             self.task_level += 1
+        # losses must take normalized data
         if self.cl:
-            loss_reg = self.loss(predict[:, :, :, :self.task_level], real[:, :, :, :self.task_level],
-                                 self.scaler, self.min_val, null_val=0.0, iner_coeff=1.0)
+            loss_reg = self.loss(
+                predict_norm[:, :, :, :self.task_level],
+                real[:, :, :, :self.task_level],
+                self.scaler, self.min_val, null_val=0.0, iner_coeff=1.0
+            )
         else:
-            loss_reg = self.loss(predict, real, self.scaler, self.min_val, null_val=0.0, iner_coeff=1.0)
+            loss_reg = self.loss(
+                predict_norm,
+                real,
+                self.scaler, self.min_val, null_val=0.0, iner_coeff=1.0
+            )
         loss_tmp = loss_reg.clone()
         np.savez('predict.npz', np.array(probs))
 
@@ -1062,12 +1068,12 @@ class Trainer():
 
         self.optimizer.step()
         # if self.mi_loss or self.loss_mse:
-        if self.mi_loss:
-            predict = inverse_transform(predict, self.scaler, self.min_val)
-        mae = masked_mae(predict, real, 0.0, scalar=self.scaler).item()
+        predict = self.scaler.inverse_transform(predict_norm)
+        real_unnorm = self.scaler.inverse_transform(real)
+        mae = masked_mae(predict, real_unnorm, 0.0, scalar=self.scaler).item()
         self.writer.add_scalar('MAE/train', mae, self.iter)
-        mape = masked_mape(predict, real, 0.0).item()
-        rmse = masked_rmse(predict, real, 0.0).item()
+        mape = masked_mape(predict, real_unnorm, 0.0).item()
+        rmse = masked_rmse(predict, real_unnorm, 0.0).item()
         self.iter += 1
         return loss.item(), mape, rmse, adp
 
