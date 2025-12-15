@@ -1062,10 +1062,10 @@ class Trainer():
 
         self.optimizer.step()
         # if self.mi_loss or self.loss_mse:
-        print("predict:", predict)
         print("real:", real)
         if self.mi_loss:
             predict = inverse_transform(predict, self.scaler, self.min_val)
+        print("predict:", predict)
         mae = masked_mae(predict, real, 0.0, scalar=self.scaler).item()
         self.writer.add_scalar('MAE/train', mae, self.iter)
         mape = masked_mape(predict, real, 0.0).item()
