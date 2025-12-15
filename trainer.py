@@ -625,13 +625,11 @@ def load_graphdata_channel1(
 
     dirpath = os.path.dirname(graph_signal_matrix_filename)
 
-    filename = os.path.join(dirpath, file)
+    filename = os.path.join(dirpath, file) + '.npz'
 
     #print('load file:', filename)
-
-    file_data = np.load(filename + '.npz')
     dataset = read_and_generate_dataset(
-        file_data,
+        filename,
         num_of_weeks,
         num_of_days,
         num_of_hours,
@@ -640,11 +638,11 @@ def load_graphdata_channel1(
         save=False
     )
     train_x = dataset['train_x']  # (10181, 307, 3, 12)
-    train_x = train_x[:, :, 0:1, :]
+    train_x = train_x[:, :, 0:1, :] # just use the first feature (speed)
     train_target = dataset['train_target']  # (10181, 307, 12)
 
     val_x = dataset['val_x']
-    val_x = val_x[:, :, 0:1, :]
+    val_x = val_x[:, :, 0:1, :],
     val_target = dataset['val_target']
 
     test_x = dataset['test_x']
